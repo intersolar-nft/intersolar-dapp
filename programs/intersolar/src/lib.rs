@@ -17,12 +17,13 @@ const MAX_NAME_LENGTH: usize = 32;
  mod intersolar {
     use super::*;
     
-    pub fn initialize(ctx: Context<Initialize>) -> ProgramResult {
+    pub fn initialize(ctx: Context<Initialize>, bump: u8) -> ProgramResult {
         let intersolar = &mut ctx.accounts.intersolar;
         let token_mint = &ctx.accounts.token_mint;
         
         intersolar.token_mint = token_mint.key();
         intersolar.key = 0; // TODO this has to be set depending on the token mint
+        intersolar.bump = bump;
 
         Ok(())
     }
@@ -63,18 +64,19 @@ const MAX_NAME_LENGTH: usize = 32;
 
 
 #[derive(Accounts)]
+#[instruction(bump: u8)]
 pub struct Initialize<'info> {
     #[account(
         init, 
-        //seeds=[PREFIX.as_bytes(), token_mint.key().as_ref()],
-        //bump=10,
+        seeds=[PREFIX.as_bytes(), token_mint.key().as_ref()],
+        bump=bump,
         payer=user,
         space=
         32 // Pubkey
         + 1 // Key
         + 1 + MAX_NAME_LENGTH // Optional + Name
+        + 1 // Bump
     )]
-
     pub intersolar: Account<'info, Intersolar>,
 
     #[account(mut)]
@@ -106,7 +108,8 @@ pub struct Update<'info> {
 pub struct Intersolar {
     pub token_mint: Pubkey,
     pub key: u8,
-    pub name: Option<String>
+    pub name: Option<String>,
+    pub bump: u8
 }
 
 pub fn assert_initialized<T: Pack + IsInitialized>(

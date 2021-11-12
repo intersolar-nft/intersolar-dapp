@@ -2,6 +2,8 @@ const anchor = require('@project-serum/anchor');
 
 const splToken = require('@solana/spl-token');
 
+const PREFIX = "intersolar"
+
 describe('intersolar', () => {
 
   it('Is initialized!', async () => {
@@ -52,7 +54,13 @@ describe('intersolar', () => {
     const intersolarKeypair = anchor.web3.Keypair.generate();
 
     const program = anchor.workspace.Intersolar;
+    const [user, bump] = await anchor.web3.PublicKey.findProgramAddress(
+      [Buffer.from(PREFIX), mint.publicKey.toBuffer()],
+      program.programId
+    );
+
     const tx = await program.rpc.initialize(
+      bump,
       {
         accounts: {
           intersolar: intersolarKeypair.publicKey,
@@ -62,7 +70,7 @@ describe('intersolar', () => {
         },
         signers: [
           receiverKeypair,
-          intersolarKeypair
+          //intersolarKeypair
         ]
       });
     console.log("Your transaction signature", tx);
