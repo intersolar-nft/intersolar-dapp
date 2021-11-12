@@ -43,7 +43,7 @@ const MAX_NAME_LENGTH: usize = 32;
             return Err(ErrorCode::MintMismatch.into());
         }
 
-        if token_account.amount == 1 {
+        if token_account.amount != 1 {
             return Err(ErrorCode::InsufficientAmount.into())
         }
 
@@ -66,15 +66,17 @@ const MAX_NAME_LENGTH: usize = 32;
 pub struct Initialize<'info> {
     #[account(
         init, 
-        seeds=[PREFIX.as_bytes(), program_id.key().as_ref(), token_mint.key().as_ref()],
-        bump=1,
+        //seeds=[PREFIX.as_bytes(), token_mint.key().as_ref()],
+        //bump=10,
         payer=user,
         space=
         32 // Pubkey
         + 1 // Key
         + 1 + MAX_NAME_LENGTH // Optional + Name
     )]
+
     pub intersolar: Account<'info, Intersolar>,
+
     #[account(mut)]
     pub user: Signer<'info>,
 
@@ -91,7 +93,7 @@ pub struct Update<'info> {
         bump=1
     )]
     pub intersolar: Account<'info, Intersolar>,
-    #[account(mut)]
+
     pub user: Signer<'info>,
 
     pub token_mint: AccountInfo<'info>,
