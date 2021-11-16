@@ -1,6 +1,7 @@
 import * as anchor from '@project-serum/anchor';
 import * as splToken from '@solana/spl-token';
 import * as assert from 'assert';
+import { Intersolar } from '../target/types/intersolar';
 
 const PREFIX = "intersolar"
 
@@ -51,7 +52,7 @@ describe('intersolar', () => {
       1,
     );
 
-    const program = anchor.workspace.Intersolar;
+    const program = anchor.workspace.Intersolar as anchor.Program<Intersolar>;
     const [intersolarPublicKey, bump] = await anchor.web3.PublicKey.findProgramAddress(
       [Buffer.from(PREFIX), mint.publicKey.toBuffer()],
       program.programId
