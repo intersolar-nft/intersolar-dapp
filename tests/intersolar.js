@@ -51,10 +51,8 @@ describe('intersolar', () => {
       1,
     );
 
-    const intersolarKeypair = anchor.web3.Keypair.generate();
-
     const program = anchor.workspace.Intersolar;
-    const [user, bump] = await anchor.web3.PublicKey.findProgramAddress(
+    const [intersolarPublicKey, bump] = await anchor.web3.PublicKey.findProgramAddress(
       [Buffer.from(PREFIX), mint.publicKey.toBuffer()],
       program.programId
     );
@@ -63,7 +61,7 @@ describe('intersolar', () => {
       bump,
       {
         accounts: {
-          intersolar: intersolarKeypair.publicKey,
+          intersolar: intersolarPublicKey,
           user: receiverKeypair.publicKey,
           tokenMint: mint.publicKey,
           systemProgram: anchor.web3.SystemProgram.programId
