@@ -77,7 +77,7 @@ pub struct Initialize<'info> {
         8 // discriminator
         + 32 // Pubkey
         + 1 // Key
-        + 1 + MAX_NAME_LENGTH // Optional + Name
+        + 1 + 4 + MAX_NAME_LENGTH // Optional + len as u32 (borsh) + Name
         + 1 // Bump
     )]
     pub intersolar: Account<'info, Intersolar>,
