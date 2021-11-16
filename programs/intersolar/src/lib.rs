@@ -56,7 +56,9 @@ const MAX_NAME_LENGTH: usize = 32;
             return Err(ErrorCode::NameTooLong.into()); 
         }
 
-        intersolar.name = Some(string_to_fixed_len_byte_array(name, MAX_NAME_LENGTH));
+        intersolar.name = Some(name);
+
+        // intersolar.name = Some(string_to_fixed_len_byte_array(name, MAX_NAME_LENGTH));
 
         Ok(())
     }
@@ -72,7 +74,8 @@ pub struct Initialize<'info> {
         bump=bump,
         payer=user,
         space=
-        32 // Pubkey
+        8 // discriminator
+        + 32 // Pubkey
         + 1 // Key
         + 1 + MAX_NAME_LENGTH // Optional + Name
         + 1 // Bump
@@ -91,11 +94,12 @@ pub struct Initialize<'info> {
 pub struct Update<'info> {
     #[account(
         mut,
-        seeds=[PREFIX.as_bytes(), program_id.key().as_ref(), token_mint.key().as_ref()],
-        bump=1
+        seeds=[PREFIX.as_bytes(), token_mint.key().as_ref()],
+        bump=intersolar.bump
     )]
     pub intersolar: Account<'info, Intersolar>,
 
+    #[account(mut)]
     pub user: Signer<'info>,
 
     pub token_mint: AccountInfo<'info>,

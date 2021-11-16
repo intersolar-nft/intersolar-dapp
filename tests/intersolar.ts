@@ -60,7 +60,7 @@ async function setupMint(connection: Connection): Promise<MintSetup> {
   };
 }
 
-interface IntersolarSetup extends MintSetup{
+interface IntersolarSetup extends MintSetup {
   intersolarPublicKey,
   bump
 }
@@ -85,11 +85,11 @@ async function setupIntersolar(connection: Connection): Promise<IntersolarSetup>
         setup.receiverKeypair,
       ]
     });
-    return {
-      ...setup,
-      intersolarPublicKey,
-      bump,
-    };
+  return {
+    ...setup,
+    intersolarPublicKey,
+    bump,
+  };
 }
 
 describe('intersolar', () => {
@@ -98,5 +98,26 @@ describe('intersolar', () => {
     anchor.setProvider(anchor.Provider.env());
     const connection = anchor.Provider.env().connection;
     await setupIntersolar(connection);
+  });
+
+  it('should update name', async () => {
+    anchor.setProvider(anchor.Provider.env());
+    const connection = anchor.Provider.env().connection;
+    const myMaxLengthName = "12345678901234567890123456789012"; // 32 bytes
+    const setup = await setupIntersolar(connection);
+    await intersolarProgram.rpc.update(
+      myMaxLengthName, {
+      accounts: {
+        intersolar: setup.intersolarPublicKey,
+        user: setup.receiverKeypair.publicKey,
+        tokenMint: setup.mint.publicKey,
+        tokenAccount: setup.receiverTokenAccount.address,
+      },
+      signers: [
+        setup.receiverKeypair,
+      ],
+    });
+    const intersolarAcc = await intersolarProgram.account.intersolar.fetch(setup.intersolarPublicKey);
+    assert.equal(intersolarAcc.name, myMaxLengthName);
   });
 });
