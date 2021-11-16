@@ -1,6 +1,6 @@
-const anchor = require('@project-serum/anchor');
-
-const splToken = require('@solana/spl-token');
+import * as anchor from '@project-serum/anchor';
+import * as splToken from '@solana/spl-token';
+import * as assert from 'assert';
 
 const PREFIX = "intersolar"
 
