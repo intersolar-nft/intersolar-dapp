@@ -28,7 +28,7 @@ const MAX_NAME_LENGTH: usize = 32;
         Ok(())
     }
 
-    pub fn update(ctx: Context<Update>, name: String) -> ProgramResult {
+    pub fn rename(ctx: Context<Rename>, name: String) -> ProgramResult {
         let intersolar = &mut ctx.accounts.intersolar;
         let token_mint = &ctx.accounts.token_mint;
         let token_account = &ctx.accounts.token_account;
@@ -58,10 +58,10 @@ const MAX_NAME_LENGTH: usize = 32;
 
         intersolar.name = Some(name);
 
-        // intersolar.name = Some(string_to_fixed_len_byte_array(name, MAX_NAME_LENGTH));
-
         Ok(())
     }
+
+    // TODO Update method for editing key -> use Metaplex update_authority and is_mutable flags for this
 }
 
 
@@ -91,7 +91,7 @@ pub struct Initialize<'info> {
 }
 
 #[derive(Accounts)]
-pub struct Update<'info> {
+pub struct Rename<'info> {
     #[account(
         mut,
         seeds=[PREFIX.as_bytes(), token_mint.key().as_ref()],
@@ -125,14 +125,6 @@ pub fn assert_initialized<T: Pack + IsInitialized>(
     } else {
         Ok(account)
     }
-}
-
-fn string_to_fixed_len_byte_array(s: String, fixed_len: usize) -> String {
-    let mut array_of_zeroes = vec![];
-    while array_of_zeroes.len() < fixed_len - s.len() {
-        array_of_zeroes.push(0u8);
-    }
-    s.clone() + std::str::from_utf8(&array_of_zeroes).unwrap()
 }
 
 #[error]

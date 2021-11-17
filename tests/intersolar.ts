@@ -100,12 +100,12 @@ describe('intersolar', () => {
     await setupIntersolar(connection);
   });
 
-  it('should update name', async () => {
+  it('rename should succeed', async () => {
     anchor.setProvider(anchor.Provider.env());
     const connection = anchor.Provider.env().connection;
     const myMaxLengthName = "12345678901234567890123456789012"; // 32 bytes
     const setup = await setupIntersolar(connection);
-    await intersolarProgram.rpc.update(
+    await intersolarProgram.rpc.rename(
       myMaxLengthName, {
       accounts: {
         intersolar: setup.intersolarPublicKey,
