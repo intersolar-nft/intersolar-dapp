@@ -87,6 +87,8 @@ pub struct Initialize<'info> {
 
     pub token_mint: AccountInfo<'info>,
 
+    pub metadata: AccountInfo<'info>,
+
     pub system_program: Program<'info, System>,
 }
 
@@ -113,7 +115,8 @@ pub struct Intersolar {
     pub token_mint: Pubkey,
     pub key: u8,
     pub name: Option<String>,
-    pub bump: u8
+    pub bump: u8,
+    pub update_authority: Pubkey
 }
 
 pub fn assert_initialized<T: Pack + IsInitialized>(

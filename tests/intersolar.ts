@@ -105,6 +105,7 @@ describe('intersolar', () => {
     const connection = anchor.Provider.env().connection;
     const myMaxLengthName = "12345678901234567890123456789012"; // 32 bytes
     const setup = await setupIntersolar(connection);
+  
     await intersolarProgram.rpc.rename(
       myMaxLengthName, {
       accounts: {
@@ -120,4 +121,6 @@ describe('intersolar', () => {
     const intersolarAcc = await intersolarProgram.account.intersolar.fetch(setup.intersolarPublicKey);
     assert.equal(intersolarAcc.name, myMaxLengthName);
   });
+
+  // TODO: Check creating two intersolar accounts for one mint fails
 });
