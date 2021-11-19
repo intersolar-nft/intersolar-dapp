@@ -19,9 +19,9 @@ const MAX_NAME_LENGTH: usize = 32;
     
     pub fn initialize(ctx: Context<Initialize>, bump: u8) -> ProgramResult {
         let intersolar = &mut ctx.accounts.intersolar;
-        let token_mint = &ctx.accounts.token_mint;
+        let mint = &ctx.accounts.mint;
         
-        intersolar.token_mint = token_mint.key();
+        intersolar.mint = mint.key();
         intersolar.key = 0; // TODO this has to be set depending on the token mint
         intersolar.bump = bump;
 
@@ -30,7 +30,7 @@ const MAX_NAME_LENGTH: usize = 32;
 
     pub fn rename(ctx: Context<Rename>, name: String) -> ProgramResult {
         let intersolar = &mut ctx.accounts.intersolar;
-        let token_mint = &ctx.accounts.token_mint;
+        let mint = &ctx.accounts.mint;
         let token_account = &ctx.accounts.token_account;
         let user = &ctx.accounts.user;
 
@@ -40,7 +40,7 @@ const MAX_NAME_LENGTH: usize = 32;
             return Err(ErrorCode::OwnerMismatch.into())
         }
 
-        if token_account.mint != *token_mint.key {
+        if token_account.mint != *mint.key {
             return Err(ErrorCode::MintMismatch.into());
         }
 
@@ -48,7 +48,7 @@ const MAX_NAME_LENGTH: usize = 32;
             return Err(ErrorCode::InsufficientAmount.into())
         }
 
-        if intersolar.token_mint != *token_mint.key {
+        if intersolar.mint != *mint.key {
             return Err(ErrorCode::MintMismatch.into()); 
         }
 
@@ -70,7 +70,7 @@ const MAX_NAME_LENGTH: usize = 32;
 pub struct Initialize<'info> {
     #[account(
         init, 
-        seeds=[PREFIX.as_bytes(), token_mint.key().as_ref()],
+        seeds=[PREFIX.as_bytes(), mint.key().as_ref()],
         bump=bump,
         payer=user,
         space=
@@ -85,7 +85,7 @@ pub struct Initialize<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
 
-    pub token_mint: AccountInfo<'info>,
+    pub mint: AccountInfo<'info>,
 
     pub metadata: AccountInfo<'info>,
 
@@ -96,7 +96,7 @@ pub struct Initialize<'info> {
 pub struct Rename<'info> {
     #[account(
         mut,
-        seeds=[PREFIX.as_bytes(), token_mint.key().as_ref()],
+        seeds=[PREFIX.as_bytes(), mint.key().as_ref()],
         bump=intersolar.bump
     )]
     pub intersolar: Account<'info, Intersolar>,
@@ -104,7 +104,7 @@ pub struct Rename<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
 
-    pub token_mint: AccountInfo<'info>,
+    pub mint: AccountInfo<'info>,
 
     #[account(constraint = token_account.owner == &spl_token::id())]
     pub token_account: AccountInfo<'info>,
@@ -112,11 +112,10 @@ pub struct Rename<'info> {
 
 #[account]
 pub struct Intersolar {
-    pub token_mint: Pubkey,
+    pub mint: Pubkey,
     pub key: u8,
     pub name: Option<String>,
-    pub bump: u8,
-    pub update_authority: Pubkey
+    pub bump: u8
 }
 
 pub fn assert_initialized<T: Pack + IsInitialized>(
