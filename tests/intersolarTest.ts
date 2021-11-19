@@ -95,6 +95,9 @@ async function setupIntersolar(connection: Connection): Promise<IntersolarSetup>
 describe('intersolar', () => {
 
   it('initialize should succeed', async () => {
+    console.log(`intersolarProgram.programId: `, intersolarProgram.programId.toString());
+
+    
     anchor.setProvider(anchor.Provider.env());
     const connection = anchor.Provider.env().connection;
     await setupIntersolar(connection);

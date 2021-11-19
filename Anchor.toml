@@ -1,5 +1,6 @@
 [programs.localnet]
 intersolar = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+intersolar_type_mapper = "6R5e1nbRBT94tfZRNZHYCmrydqBipEAPPsYrA8QbTftT"
 
 [registry]
 url = "https://anchor.projectserum.com"
