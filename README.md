@@ -1,8 +1,14 @@
 # intersolar-dapp
 
+Decentralized application for the [Intersolar NFT](https://intersolar-nft.com/) project.
+
 # Programs
 
+Solana on-chain programs that provide the functionality needed by [Intersolar](https://intersolar-nft.com/). Written using the [Anchor](https://github.com/project-serum/anchor) framework.
+
 ## Intersolar
+
+This program is the root of all intersolar assets. It stores the name and type and provides renaming functionality to the token holder.
 
 ### PDA
 
