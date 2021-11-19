@@ -31,5 +31,9 @@ This program is used to find the intersolar type (planet, ship, etc.) for a give
 ### Account
 
 ```
-// TODO 
+#[account]
+pub struct IntersolarTypeMapper {
+    pub r#type: u8,
+    pub bump: u8
+}
 ```

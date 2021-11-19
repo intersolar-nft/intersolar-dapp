@@ -64,7 +64,6 @@ const MAX_NAME_LENGTH: usize = 32;
     // TODO Update method for editing key -> use Metaplex update_authority and is_mutable flags for this
 }
 
-
 #[derive(Accounts)]
 #[instruction(bump: u8)]
 pub struct Initialize<'info> {
@@ -87,7 +86,7 @@ pub struct Initialize<'info> {
 
     pub mint: AccountInfo<'info>,
 
-    pub metadata: AccountInfo<'info>,
+    // pub metadata: AccountInfo<'info>,
 
     pub system_program: Program<'info, System>,
 }

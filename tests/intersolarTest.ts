@@ -78,7 +78,7 @@ async function setupIntersolar(connection: Connection): Promise<IntersolarSetup>
       accounts: {
         intersolar: intersolarPublicKey,
         user: setup.receiverKeypair.publicKey,
-        tokenMint: setup.mint.publicKey,
+        mint: setup.mint.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId
       },
       signers: [
@@ -114,7 +114,7 @@ describe('intersolar', () => {
       accounts: {
         intersolar: setup.intersolarPublicKey,
         user: setup.receiverKeypair.publicKey,
-        tokenMint: setup.mint.publicKey,
+        mint: setup.mint.publicKey,
         tokenAccount: setup.receiverTokenAccount.address,
       },
       signers: [
