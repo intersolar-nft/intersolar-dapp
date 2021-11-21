@@ -1,13 +1,13 @@
 import * as anchor from '@project-serum/anchor';
-import { Connection, Keypair } from '@solana/web3.js';
+import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import * as splToken from '@solana/spl-token';
 import * as assert from 'assert';
 import { IntersolarTypeMapper } from '../target/types/intersolar_type_mapper';
 
-const PREFIX = "intersolar-type-mapper"
+export const PREFIX = "intersolar-type-mapper"
 
-const PLANET_SYMBOL = "PLANET"
-const PLANET_TYPE = 0
+export const PLANET_SYMBOL = "PLANET"
+export const PLANET_TYPE = 0
 
 
 const intersolarTypeMapperProgram = anchor.workspace.IntersolarTypeMapper as anchor.Program<IntersolarTypeMapper>;
@@ -29,6 +29,34 @@ async function doSetup(connection: Connection): Promise<Setup> {
   };
 }
 
+export interface TypeMapperSetup {
+  bump: number,
+  intersolarTypeMapperPublicKey: PublicKey
+}
+
+export async function setupTyperMapper(connection: Connection, updateAuthority: Keypair) : Promise<TypeMapperSetup> {
+  const [intersolarTypeMapperPublicKey, bump] = await anchor.web3.PublicKey.findProgramAddress(
+    [Buffer.from(PREFIX), Buffer.from(PLANET_SYMBOL), updateAuthority.publicKey.toBuffer()],
+    intersolarTypeMapperProgram.programId
+  );
+
+  await intersolarTypeMapperProgram.rpc.initialize(bump, PLANET_SYMBOL, PLANET_TYPE, {
+    accounts: {
+      intersolarTypeMapper: intersolarTypeMapperPublicKey,
+      updateAuthority: updateAuthority.publicKey,
+      systemProgram: anchor.web3.SystemProgram.programId
+    },
+    signers: [
+      updateAuthority
+    ]
+  });
+
+  return {
+    bump,
+    intersolarTypeMapperPublicKey,
+  }
+}
+
 describe('intersolar-type-mapper', () => {
 
   it('initialize should succeed', async () => {
@@ -36,23 +64,9 @@ describe('intersolar-type-mapper', () => {
     const connection = anchor.Provider.env().connection;
     const setup = await doSetup(connection);
 
-    const [intersolarTypeMapperPlanetMappingPublicKey, bump] = await anchor.web3.PublicKey.findProgramAddress(
-      [Buffer.from(PREFIX), Buffer.from(PLANET_SYMBOL), setup.payerKeypair.publicKey.toBuffer()],
-      intersolarTypeMapperProgram.programId
-    );
+    const typeMapperSetup = await setupTyperMapper(connection, setup.payerKeypair);
 
-    await intersolarTypeMapperProgram.rpc.initialize(bump, PLANET_SYMBOL, PLANET_TYPE, {
-      accounts: {
-        intersolarTypeMapper: intersolarTypeMapperPlanetMappingPublicKey,
-        updateAuthority: setup.payerKeypair.publicKey,
-        systemProgram: anchor.web3.SystemProgram.programId
-      },
-      signers: [
-        setup.payerKeypair
-      ]
-    });
-
-    const intersolarTypeMapperPlanetMappingAccount = await intersolarTypeMapperProgram.account.intersolarTypeMapper.fetch(intersolarTypeMapperPlanetMappingPublicKey);
+    const intersolarTypeMapperPlanetMappingAccount = await intersolarTypeMapperProgram.account.intersolarTypeMapper.fetch(typeMapperSetup.intersolarTypeMapperPublicKey);
 
     assert.equal(intersolarTypeMapperPlanetMappingAccount.rType, PLANET_TYPE);
   });

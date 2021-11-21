@@ -4,6 +4,7 @@ import * as splToken from '@solana/spl-token';
 import * as assert from 'assert';
 import { Intersolar } from '../target/types/intersolar';
 import { AnyPublicKey, programs } from '@metaplex/js';
+import { PLANET_SYMBOL, PLANET_TYPE, setupTyperMapper } from './intersolarTypeMapperTest';
 
 const PREFIX = "intersolar"
 
@@ -71,13 +72,13 @@ async function setupMetadata(connection: Connection): Promise<MetadataSetup> {
   const metadataPDA = await programs.metadata.Metadata.getPDA(setup.mint.publicKey);
 
   const createMetadataInstruction = new programs.metadata.CreateMetadata(
-    { feePayer: setup.payerKeypair.publicKey, signatures: [setup.payerKeypair] },
+    { feePayer: setup.payerKeypair.publicKey, },
     {
       metadata: metadataPDA,
       metadataData: new programs.metadata.MetadataDataData({
         name: "#1",
         uri: "https://intersolar-nft.web.app/favicon-32x32.png",
-        symbol: "Planet",
+        symbol: PLANET_SYMBOL,
         sellerFeeBasisPoints: 0.075,
         creators: [
           new programs.metadata.Creator(
@@ -114,6 +115,9 @@ interface IntersolarSetup extends MetadataSetup {
 
 async function setupIntersolar(connection: Connection): Promise<IntersolarSetup> {
   const setup = await setupMetadata(connection);
+
+  const typerMapperSetup = await setupTyperMapper(connection, setup.payerKeypair);
+
   const [intersolarPublicKey, bump] = await anchor.web3.PublicKey.findProgramAddress(
     [Buffer.from(PREFIX), setup.mint.publicKey.toBuffer()],
     intersolarProgram.programId
@@ -121,9 +125,13 @@ async function setupIntersolar(connection: Connection): Promise<IntersolarSetup>
 
   await intersolarProgram.rpc.initialize(
     bump,
+    typerMapperSetup.bump,
+    PLANET_SYMBOL,
     {
       accounts: {
         intersolar: intersolarPublicKey,
+        typeMapper: typerMapperSetup.intersolarTypeMapperPublicKey,
+        updateAuthority: setup.payerKeypair.publicKey,
         user: setup.receiverKeypair.publicKey,
         mint: setup.mint.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,

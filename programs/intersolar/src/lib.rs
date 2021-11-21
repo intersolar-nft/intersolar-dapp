@@ -136,10 +136,10 @@ pub struct Initialize<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
 
-    #[account(constraint = mint.owner == &spl_token::native_mint::id())]
+    #[account(constraint = mint.owner == &spl_token::id())]
     pub mint: AccountInfo<'info>,
 
-    #[account(constraint = metadata.owner == &spl_token_metadata::id())]
+   #[account(constraint = metadata.owner == &spl_token_metadata::id())]
     pub metadata: AccountInfo<'info>,
 
     pub update_authority: AccountInfo<'info>,
@@ -165,9 +165,10 @@ pub struct Rename<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
 
-    #[account(constraint = mint.owner == &spl_token::native_mint::id())]
+    #[account(constraint = mint.owner == &spl_token::id())]
     pub mint: AccountInfo<'info>,
 
+    // TODO: Check owner against TOKEN_ACCOUNT program ID, not MINT program ID
     #[account(constraint = token_account.owner == &spl_token::id())]
     pub token_account: AccountInfo<'info>,
 }
