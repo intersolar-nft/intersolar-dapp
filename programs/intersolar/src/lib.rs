@@ -17,9 +17,14 @@ const MAX_NAME_LENGTH: usize = 32;
 #[program]
  mod intersolar {
     use super::*;
-    
+   
+    // Initializes the intersolar object. 
+    // This can be called by anyone that pays for it. 
+    // It sets the type for the intersolar object by looking up the intersolar-type-mapper with the update_authority of the metadata and provided symbol.
     pub fn initialize(ctx: Context<Initialize>, bump: u8, _type_mapper_bump: u8, symbol: String) -> ProgramResult {
+
         let intersolar = &mut ctx.accounts.intersolar;
+
         let mint = &ctx.accounts.mint;
         let metadata = &ctx.accounts.metadata;
         let update_authority = &ctx.accounts.update_authority;
@@ -54,33 +59,42 @@ const MAX_NAME_LENGTH: usize = 32;
     }
 
     pub fn rename(ctx: Context<Rename>, name: String) -> ProgramResult {
+
         let intersolar = &mut ctx.accounts.intersolar;
+
         let mint = &ctx.accounts.mint;
         let token_account = &ctx.accounts.token_account;
         let user = &ctx.accounts.user;
 
+        // Check that the token account is initialized
         let token_account: spl_token::state::Account = assert_initialized(token_account)?;
 
+        // Check that the user is the owner of the token_account
         if token_account.owner != *user.key {
             return Err(ErrorCode::OwnerMismatch.into())
         }
 
+        // check that the token_account belongs to the mint
         if token_account.mint != *mint.key {
             return Err(ErrorCode::MintMismatch.into());
         }
 
+        // check that the user holds the nft
         if token_account.amount != 1 {
             return Err(ErrorCode::InsufficientAmount.into())
         }
 
+        // check that the mint belongs to the intersolar account
         if intersolar.mint != *mint.key {
             return Err(ErrorCode::MintMismatch.into()); 
         }
 
+        // Check that the new name doesnt exceed the length limit
         if name.len() > MAX_NAME_LENGTH {
             return Err(ErrorCode::NameTooLong.into()); 
         }
 
+        // Set the new name for the intersolar object
         intersolar.name = Some(name);
 
         Ok(())
@@ -98,7 +112,7 @@ pub struct Initialize<'info> {
         space=
         8 // discriminator
         + 32 // Pubkey
-        + 1 // Key
+        + 1 // Type
         + 1 + 4 + MAX_NAME_LENGTH // Optional + len as u32 (borsh) + Name
         + 1 // Bump
     )]
