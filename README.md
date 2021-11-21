@@ -21,7 +21,7 @@ This program is the root of all intersolar assets. It stores the name and type a
 pub struct Intersolar {
     // The NFT token_mint this account belongs to
     pub mint: Pubkey,
-    // The type of this intersolar object (e.g. "Planet", "Ship", ...)
+    // The type of this intersolar object (e.g. 0 for "Planet", 1 for "Ship", ...)
     pub r#type: u8,
     // The name of the intersolar object (can be changed by the NFT owner)
     pub name: Option<String>,
