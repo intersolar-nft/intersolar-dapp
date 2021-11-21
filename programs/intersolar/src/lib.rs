@@ -3,8 +3,9 @@ use {
         prelude::*,
         solana_program::{
             program_pack::{IsInitialized, Pack},
+            entrypoint::ProgramResult
         } 
-    }
+    },
 };
 
 declare_id!("Gv88Apj2oxHTWnECLF4bHnuftMXasfYHyBu3gyfs8XEe");
@@ -17,12 +18,36 @@ const MAX_NAME_LENGTH: usize = 32;
  mod intersolar {
     use super::*;
     
-    pub fn initialize(ctx: Context<Initialize>, bump: u8) -> ProgramResult {
+    pub fn initialize(ctx: Context<Initialize>, bump: u8, _type_mapper_bump: u8, symbol: String) -> ProgramResult {
         let intersolar = &mut ctx.accounts.intersolar;
         let mint = &ctx.accounts.mint;
-        
+        let metadata = &ctx.accounts.metadata;
+        let update_authority = &ctx.accounts.update_authority;
+        let type_mapper = &ctx.accounts.type_mapper;
+
+        // Deserialize the metadata account to check if it is correct
+        let metadata = &spl_token_metadata::state::Metadata::from_account_info(metadata)?;
+
+        // Check that the given mint account has the given update_authority
+        match spl_token_metadata::utils::assert_update_authority_is_correct(metadata, update_authority) {
+            Err(error) => return Err(error),
+            _ => ()
+        }
+
+        // Check that the given mint belongs to the given metadata
+        if metadata.mint != mint.key() {
+            return Err(ErrorCode::MintMismatch.into())
+        }
+
+        // Check that the given symbol matches the metadata symbol
+        if symbol != metadata.data.symbol {
+            return Err(ErrorCode::SymbolMismatch.into())
+        }
+
+        // Set the type of the intersolar account to the type in the type account
+        intersolar.r#type = type_mapper.r#type;
+
         intersolar.mint = mint.key();
-        intersolar.key = 0; // TODO this has to be set depending on the token mint
         intersolar.bump = bump;
 
         Ok(())
@@ -60,12 +85,10 @@ const MAX_NAME_LENGTH: usize = 32;
 
         Ok(())
     }
-
-    // TODO Update method for editing key -> use Metaplex update_authority and is_mutable flags for this
 }
 
 #[derive(Accounts)]
-#[instruction(bump: u8)]
+#[instruction(bump: u8, _type_mapper_bump: u8, symbol: String)]
 pub struct Initialize<'info> {
     #[account(
         init, 
@@ -84,9 +107,19 @@ pub struct Initialize<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
 
+    #[account(constraint = mint.owner == &spl_token::native_mint::id())]
     pub mint: AccountInfo<'info>,
 
-    // pub metadata: AccountInfo<'info>,
+    #[account(constraint = metadata.owner == &spl_token_metadata::id())]
+    pub metadata: AccountInfo<'info>,
+
+    pub update_authority: AccountInfo<'info>,
+
+    #[account(
+        seeds=[intersolar_type_mapper::PREFIX.as_bytes(), symbol.as_bytes(), update_authority.key().as_ref()],
+        bump=_type_mapper_bump
+    )]
+    pub type_mapper: Account<'info, intersolar_type_mapper::IntersolarTypeMapper>,
 
     pub system_program: Program<'info, System>,
 }
@@ -103,6 +136,7 @@ pub struct Rename<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
 
+    #[account(constraint = mint.owner == &spl_token::native_mint::id())]
     pub mint: AccountInfo<'info>,
 
     #[account(constraint = token_account.owner == &spl_token::id())]
@@ -112,7 +146,7 @@ pub struct Rename<'info> {
 #[account]
 pub struct Intersolar {
     pub mint: Pubkey,
-    pub key: u8,
+    pub r#type: u8,
     pub name: Option<String>,
     pub bump: u8
 }
@@ -140,4 +174,6 @@ pub enum ErrorCode {
     OwnerMismatch,
     #[msg("Name is too long!")]
     NameTooLong,
+    #[msg("Symbol not matching with metadata!")]
+    SymbolMismatch,
 }

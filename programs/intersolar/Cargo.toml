@@ -17,3 +17,5 @@ default = []
 [dependencies]
 anchor-lang = "0.18.0"
 spl-token = { version="3.2.0", features = [ "no-entrypoint" ] }
+spl-token-metadata = "0.0.1"
+intersolar-type-mapper = { path = "../intersolar-type-mapper" }

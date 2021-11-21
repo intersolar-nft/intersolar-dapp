@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 declare_id!("6R5e1nbRBT94tfZRNZHYCmrydqBipEAPPsYrA8QbTftT");
 
-const PREFIX: &str = "intersolar-type-mapper";
+pub const PREFIX: &str = "intersolar-type-mapper";
 
 #[program]
 pub mod intersolar_type_mapper {
