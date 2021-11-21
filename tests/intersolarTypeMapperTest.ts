@@ -7,7 +7,7 @@ import { IntersolarTypeMapper } from '../target/types/intersolar_type_mapper';
 const PREFIX = "intersolar-type-mapper"
 
 const PLANET_SYMBOL = "PLANET"
-const PLANET_TYPE = 7
+const PLANET_TYPE = 0
 
 
 const intersolarTypeMapperProgram = anchor.workspace.IntersolarTypeMapper as anchor.Program<IntersolarTypeMapper>;

@@ -2,6 +2,10 @@
 intersolar = "Gv88Apj2oxHTWnECLF4bHnuftMXasfYHyBu3gyfs8XEe"
 intersolar_type_mapper = "6R5e1nbRBT94tfZRNZHYCmrydqBipEAPPsYrA8QbTftT"
 
+[[test.genesis]]
+address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+program = "./deps/metaplex/metaplex_token_metadata.so"
+
 [registry]
 url = "https://anchor.projectserum.com"
 

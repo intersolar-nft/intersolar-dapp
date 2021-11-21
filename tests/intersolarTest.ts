@@ -3,6 +3,7 @@ import { Connection, Keypair } from '@solana/web3.js';
 import * as splToken from '@solana/spl-token';
 import * as assert from 'assert';
 import { Intersolar } from '../target/types/intersolar';
+import { AnyPublicKey, programs } from '@metaplex/js';
 
 const PREFIX = "intersolar"
 
@@ -60,13 +61,59 @@ async function setupMint(connection: Connection): Promise<MintSetup> {
   };
 }
 
-interface IntersolarSetup extends MintSetup {
+interface MetadataSetup extends MintSetup {
+  metadata: AnyPublicKey
+}
+
+async function setupMetadata(connection: Connection): Promise<MetadataSetup> {
+  const setup = await setupMint(connection);
+
+  const metadataPDA = await programs.metadata.Metadata.getPDA(setup.mint.publicKey);
+
+  const createMetadataInstruction = new programs.metadata.CreateMetadata(
+    { feePayer: setup.payerKeypair.publicKey, signatures: [setup.payerKeypair] },
+    {
+      metadata: metadataPDA,
+      metadataData: new programs.metadata.MetadataDataData({
+        name: "#1",
+        uri: "https://intersolar-nft.web.app/favicon-32x32.png",
+        symbol: "Planet",
+        sellerFeeBasisPoints: 0.075,
+        creators: [
+          new programs.metadata.Creator(
+            {
+              address: setup.payerKeypair.publicKey.toString(),
+              share: 100,
+              verified: true
+            }
+          )
+        ]
+      }),
+      mint: setup.mint.publicKey,
+      mintAuthority: setup.payerKeypair.publicKey,
+      updateAuthority: setup.payerKeypair.publicKey
+    }
+  )
+
+  const signature = await anchor.web3.sendAndConfirmTransaction(
+    connection,
+    createMetadataInstruction,
+    [setup.payerKeypair]
+  )
+
+  return {
+    ...setup,
+    metadata: metadataPDA
+  }
+}
+
+interface IntersolarSetup extends MetadataSetup {
   intersolarPublicKey,
   bump
 }
 
 async function setupIntersolar(connection: Connection): Promise<IntersolarSetup> {
-  const setup = await setupMint(connection);
+  const setup = await setupMetadata(connection);
   const [intersolarPublicKey, bump] = await anchor.web3.PublicKey.findProgramAddress(
     [Buffer.from(PREFIX), setup.mint.publicKey.toBuffer()],
     intersolarProgram.programId
@@ -79,7 +126,8 @@ async function setupIntersolar(connection: Connection): Promise<IntersolarSetup>
         intersolar: intersolarPublicKey,
         user: setup.receiverKeypair.publicKey,
         mint: setup.mint.publicKey,
-        systemProgram: anchor.web3.SystemProgram.programId
+        systemProgram: anchor.web3.SystemProgram.programId,
+        metadata: setup.metadata
       },
       signers: [
         setup.receiverKeypair,
@@ -96,8 +144,6 @@ describe('intersolar', () => {
 
   it('initialize should succeed', async () => {
     console.log(`intersolarProgram.programId: `, intersolarProgram.programId.toString());
-
-    
     anchor.setProvider(anchor.Provider.env());
     const connection = anchor.Provider.env().connection;
     await setupIntersolar(connection);
@@ -108,7 +154,7 @@ describe('intersolar', () => {
     const connection = anchor.Provider.env().connection;
     const myMaxLengthName = "12345678901234567890123456789012"; // 32 bytes
     const setup = await setupIntersolar(connection);
-  
+
     await intersolarProgram.rpc.rename(
       myMaxLengthName, {
       accounts: {
