@@ -46,10 +46,7 @@ const MAX_NAME_LENGTH: usize = 32;
         }
 
         // Check that the given mint account has the given update_authority
-        match spl_token_metadata::utils::assert_update_authority_is_correct(deserialized_metadata, update_authority) {
-            Err(error) => return Err(error),
-            _ => ()
-        }
+        spl_token_metadata::utils::assert_update_authority_is_correct(deserialized_metadata, update_authority)?;
 
         // Check that the given mint belongs to the given metadata
         if deserialized_metadata.mint != mint.key() {
