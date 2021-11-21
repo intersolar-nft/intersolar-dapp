@@ -19,10 +19,14 @@ This program is the root of all intersolar assets. It stores the name and type a
 ```
 #[account]
 pub struct Intersolar {
+    // The NFT token_mint this account belongs to
     pub mint: Pubkey,
-    pub key: u8,
+    // The type of this intersolar object (e.g. "Planet", "Ship", ...)
+    pub r#type: u8,
+    // The name of the intersolar object (can be changed by the NFT owner)
     pub name: Option<String>,
-    pub bump: u8,
+    // The PDA bump of the intersolar account
+    pub bump: u8
 }
 ```
 
@@ -39,7 +43,9 @@ This program is used to find the intersolar type (planet, ship, etc.) for a give
 ```
 #[account]
 pub struct IntersolarTypeMapper {
+    // The corresponding intersolar type for the PDA symbol
     pub r#type: u8,
+    // The PDA bump of the intersolar_type_mapper account
     pub bump: u8
 }
 ```
