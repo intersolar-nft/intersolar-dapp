@@ -7,15 +7,18 @@ pub const PREFIX: &str = "intersolar-type-mapper";
 #[program]
 pub mod intersolar_type_mapper {
     use super::*;
+    // Initializes a type-mapper account
+    // The PDA helps to map intersolar object types to metadata symbols
     pub fn initialize(ctx: Context<Initialize>, bump: u8, _symbol: String, r#type: u8) -> ProgramResult {
         let intersolar_type_mapper = &mut ctx.accounts.intersolar_type_mapper;
 
-        intersolar_type_mapper.bump = bump;
         intersolar_type_mapper.r#type = r#type;
+        intersolar_type_mapper.bump = bump;
         Ok(())
     }
 
-    pub fn update(ctx: Context<Initialize>, r#type: u8) -> ProgramResult {
+    // Lets the creator of the type-mapper account to change the type
+    pub fn update(ctx: Context<Initialize>, _symbol: String, r#type: u8) -> ProgramResult {
         let intersolar_type_mapper = &mut ctx.accounts.intersolar_type_mapper;
 
         intersolar_type_mapper.r#type = r#type;
@@ -60,6 +63,8 @@ pub struct Update<'info> {
 
 #[account]
 pub struct IntersolarTypeMapper {
+    // The corresponding intersolar type for the PDA symbol
     pub r#type: u8,
+    // The PDA bump of the intersolar_type_mapper account
     pub bump: u8
 }

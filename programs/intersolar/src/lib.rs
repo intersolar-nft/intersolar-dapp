@@ -1,8 +1,12 @@
+pub mod errors;
+pub mod utils;
+
 use {
+    crate::errors::ErrorCode,
+    crate::utils::{assert_initialized},
     anchor_lang::{
         prelude::*,
         solana_program::{
-            program_pack::{IsInitialized, Pack},
             entrypoint::ProgramResult
         } 
     },
@@ -20,7 +24,7 @@ const MAX_NAME_LENGTH: usize = 32;
    
     // Initializes the intersolar object. 
     // This can be called by anyone that pays for it. 
-    // It sets the type for the intersolar object by looking up the intersolar-type-mapper with the update_authority of the metadata and provided symbol.
+    // It sets the type for the intersolar object by looking it up the type_mapper with the update_authority of the metadata and provided symbol.
     pub fn initialize(ctx: Context<Initialize>, bump: u8, _type_mapper_bump: u8, symbol: String) -> ProgramResult {
 
         let intersolar = &mut ctx.accounts.intersolar;
@@ -30,26 +34,34 @@ const MAX_NAME_LENGTH: usize = 32;
         let update_authority = &ctx.accounts.update_authority;
         let type_mapper = &ctx.accounts.type_mapper;
 
+        // Deserialize the given mint account
+        let deserialized_mint: spl_token::state::Mint = assert_initialized(mint)?;
+
         // Deserialize the metadata account to check if it is correct
-        let metadata = &spl_token_metadata::state::Metadata::from_account_info(metadata)?;
+        let deserialized_metadata = &spl_token_metadata::state::Metadata::from_account_info(metadata)?;
+
+        // Check that the given mint is an NFT mint
+        if deserialized_mint.decimals != 0 || deserialized_mint.supply != 1 {
+            return Err(ErrorCode::NoNFT.into())
+        }
 
         // Check that the given mint account has the given update_authority
-        match spl_token_metadata::utils::assert_update_authority_is_correct(metadata, update_authority) {
+        match spl_token_metadata::utils::assert_update_authority_is_correct(deserialized_metadata, update_authority) {
             Err(error) => return Err(error),
             _ => ()
         }
 
         // Check that the given mint belongs to the given metadata
-        if metadata.mint != mint.key() {
+        if deserialized_metadata.mint != mint.key() {
             return Err(ErrorCode::MintMismatch.into())
         }
 
         // Check that the given symbol matches the metadata symbol
-        if symbol != metadata.data.symbol {
+        if symbol != deserialized_metadata.data.symbol {
             return Err(ErrorCode::SymbolMismatch.into())
         }
 
-        // Set the type of the intersolar account to the type in the type account
+        // Set the type of the intersolar account to the type_mapper type
         intersolar.r#type = type_mapper.r#type;
 
         intersolar.mint = mint.key();
@@ -58,6 +70,9 @@ const MAX_NAME_LENGTH: usize = 32;
         Ok(())
     }
 
+    // Sets the name of the intersolar object. 
+    // This can be called by the holder of the token from the mint. 
+    // It sets the type for the intersolar object by looking it up the type_mapper with the update_authority of the metadata and provided symbol.
     pub fn rename(ctx: Context<Rename>, name: String) -> ProgramResult {
 
         let intersolar = &mut ctx.accounts.intersolar;
@@ -67,20 +82,20 @@ const MAX_NAME_LENGTH: usize = 32;
         let user = &ctx.accounts.user;
 
         // Check that the token account is initialized
-        let token_account: spl_token::state::Account = assert_initialized(token_account)?;
+        let deserialized_token_account: spl_token::state::Account = assert_initialized(token_account)?;
 
         // Check that the user is the owner of the token_account
-        if token_account.owner != *user.key {
+        if deserialized_token_account.owner != *user.key {
             return Err(ErrorCode::OwnerMismatch.into())
         }
 
         // check that the token_account belongs to the mint
-        if token_account.mint != *mint.key {
+        if deserialized_token_account.mint != *mint.key {
             return Err(ErrorCode::MintMismatch.into());
         }
 
         // check that the user holds the nft
-        if token_account.amount != 1 {
+        if deserialized_token_account.amount != 1 {
             return Err(ErrorCode::InsufficientAmount.into())
         }
 
@@ -159,35 +174,12 @@ pub struct Rename<'info> {
 
 #[account]
 pub struct Intersolar {
+    // The NFT token_mint this account belongs to
     pub mint: Pubkey,
+    // The type of this intersolar object (e.g. "Planet", "Ship", ...)
     pub r#type: u8,
+    // The name of the intersolar object (can be changed by the NFT owner)
     pub name: Option<String>,
+    // The PDA bump of the intersolar account
     pub bump: u8
-}
-
-pub fn assert_initialized<T: Pack + IsInitialized>(
-    account_info: &AccountInfo,
-) -> Result<T> {
-    let account: T = T::unpack_unchecked(&account_info.data.borrow())?;
-    if !account.is_initialized() {
-        Err(ErrorCode::Uninitialized.into())
-    } else {
-        Ok(account)
-    }
-}
-
-#[error]
-pub enum ErrorCode {
-    #[msg("Account is not initialized!")]
-    Uninitialized,
-    #[msg("Mint mismatch!")]
-    MintMismatch,
-    #[msg("Insufficient Token Amount!")]
-    InsufficientAmount,
-    #[msg("Owner mismatch!")]
-    OwnerMismatch,
-    #[msg("Name is too long!")]
-    NameTooLong,
-    #[msg("Symbol not matching with metadata!")]
-    SymbolMismatch,
 }
