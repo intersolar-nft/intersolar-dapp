@@ -1,6 +1,6 @@
 pub mod errors;
 pub mod utils;
-
+use std::str::FromStr;
 use {
     crate::errors::ErrorCode,
     crate::utils::{assert_initialized},
@@ -10,6 +10,11 @@ use {
             entrypoint::ProgramResult
         } 
     },
+};
+use::intersolar_type_mapper::{
+    PREFIX as TYPE_MAPPER_PREFIX,
+    IntersolarTypeMapper,
+    program::IntersolarTypeMapper as IntersolarTypeMapperProgram,
 };
 
 declare_id!("Gv88Apj2oxHTWnECLF4bHnuftMXasfYHyBu3gyfs8XEe");
@@ -25,7 +30,7 @@ const MAX_NAME_LENGTH: usize = 32;
     // Initializes the intersolar object. 
     // This can be called by anyone that pays for it. 
     // It sets the type for the intersolar object by looking it up the type_mapper with the update_authority of the metadata and provided symbol.
-    pub fn initialize(ctx: Context<Initialize>, bump: u8, _type_mapper_bump: u8, symbol: String) -> ProgramResult {
+    pub fn initialize(ctx: Context<Initialize>, bump: u8, symbol: String) -> ProgramResult {
 
         let intersolar = &mut ctx.accounts.intersolar;
 
@@ -35,10 +40,21 @@ const MAX_NAME_LENGTH: usize = 32;
         let type_mapper = &ctx.accounts.type_mapper;
 
         // Deserialize the given mint account
-        let deserialized_mint: spl_token::state::Mint = assert_initialized(mint)?;
+        let deserialized_mint: &spl_token::state::Mint = &assert_initialized(mint)?;
 
         // Deserialize the metadata account to check if it is correct
         let deserialized_metadata = &spl_token_metadata::state::Metadata::from_account_info(metadata)?;
+
+        // Construct type mapper PDA
+        let (type_mapper_pubkey, _) = anchor_lang::solana_program::pubkey::Pubkey::find_program_address(
+            &[TYPE_MAPPER_PREFIX.as_bytes(), symbol.as_bytes(), update_authority.key().as_ref()], 
+            &IntersolarTypeMapperProgram::id()
+        );
+
+        // Check that given type mapper has correct symbol and update authority
+        if type_mapper.key() != type_mapper_pubkey {
+            return Err(ErrorCode::TypeMapperMismatch.into())
+        }
 
         // Check that the given mint is an NFT mint
         if deserialized_mint.decimals != 0 || deserialized_mint.supply != 1 {
@@ -46,15 +62,20 @@ const MAX_NAME_LENGTH: usize = 32;
         }
 
         // Check that the given mint account has the given update_authority
-        spl_token_metadata::utils::assert_update_authority_is_correct(deserialized_metadata, update_authority)?;
+        if deserialized_metadata.update_authority != update_authority.key() {
+            return Err(ErrorCode::UpdateAuthorityMismatch.into());
+        }
 
         // Check that the given mint belongs to the given metadata
         if deserialized_metadata.mint != mint.key() {
             return Err(ErrorCode::MintMismatch.into())
         }
 
+        // Trim trailing null bytes
+        let metadata_symbol = deserialized_metadata.data.symbol.trim_matches(char::from(0));
+
         // Check that the given symbol matches the metadata symbol
-        if symbol != deserialized_metadata.data.symbol {
+        if symbol != metadata_symbol {
             return Err(ErrorCode::SymbolMismatch.into())
         }
 
@@ -114,7 +135,7 @@ const MAX_NAME_LENGTH: usize = 32;
 }
 
 #[derive(Accounts)]
-#[instruction(bump: u8, _type_mapper_bump: u8, symbol: String)]
+#[instruction(bump: u8, symbol: String)]
 pub struct Initialize<'info> {
     #[account(
         init, 
@@ -133,19 +154,16 @@ pub struct Initialize<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
 
-    #[account(constraint = mint.owner == &spl_token::id())]
+    #[account(owner = spl_token::id())]
     pub mint: AccountInfo<'info>,
 
-   #[account(constraint = metadata.owner == &spl_token_metadata::id())]
+    #[account(owner = spl_token_metadata::id())]
     pub metadata: AccountInfo<'info>,
 
     pub update_authority: AccountInfo<'info>,
 
-    #[account(
-        seeds=[intersolar_type_mapper::PREFIX.as_bytes(), symbol.as_bytes(), update_authority.key().as_ref()],
-        bump=_type_mapper_bump
-    )]
-    pub type_mapper: Account<'info, intersolar_type_mapper::IntersolarTypeMapper>,
+    #[account(owner = intersolar_type_mapper::id())]
+    pub type_mapper: Account<'info, IntersolarTypeMapper>,
 
     pub system_program: Program<'info, System>,
 }

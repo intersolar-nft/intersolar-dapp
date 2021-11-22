@@ -16,4 +16,8 @@ pub enum ErrorCode {
     SymbolMismatch,
     #[msg("The given mint is not an NFT!")]
     NoNFT,
+    #[msg("Wrong type mapper account")]
+    TypeMapperMismatch,
+    #[msg("Wrong update authority")]
+    UpdateAuthorityMismatch,
 }

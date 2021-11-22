@@ -31,10 +31,12 @@ async function doSetup(connection: Connection): Promise<Setup> {
 
 export interface TypeMapperSetup {
   bump: number,
-  intersolarTypeMapperPublicKey: PublicKey
+  intersolarTypeMapperPublicKey: PublicKey,
+  program: PublicKey
 }
 
-export async function setupTyperMapper(connection: Connection, updateAuthority: Keypair) : Promise<TypeMapperSetup> {
+export async function setupTypeMapper(connection: Connection, updateAuthority: Keypair) : Promise<TypeMapperSetup> {
+
   const [intersolarTypeMapperPublicKey, bump] = await anchor.web3.PublicKey.findProgramAddress(
     [Buffer.from(PREFIX), Buffer.from(PLANET_SYMBOL), updateAuthority.publicKey.toBuffer()],
     intersolarTypeMapperProgram.programId
@@ -54,6 +56,7 @@ export async function setupTyperMapper(connection: Connection, updateAuthority: 
   return {
     bump,
     intersolarTypeMapperPublicKey,
+    program: intersolarTypeMapperProgram.programId
   }
 }
 
@@ -64,7 +67,7 @@ describe('intersolar-type-mapper', () => {
     const connection = anchor.Provider.env().connection;
     const setup = await doSetup(connection);
 
-    const typeMapperSetup = await setupTyperMapper(connection, setup.payerKeypair);
+    const typeMapperSetup = await setupTypeMapper(connection, setup.payerKeypair);
 
     const intersolarTypeMapperPlanetMappingAccount = await intersolarTypeMapperProgram.account.intersolarTypeMapper.fetch(typeMapperSetup.intersolarTypeMapperPublicKey);
 
