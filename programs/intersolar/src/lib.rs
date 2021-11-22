@@ -1,6 +1,5 @@
 pub mod errors;
 pub mod utils;
-use std::str::FromStr;
 use {
     crate::errors::ErrorCode,
     crate::utils::{assert_initialized},
@@ -10,11 +9,11 @@ use {
             entrypoint::ProgramResult
         } 
     },
-};
-use::intersolar_type_mapper::{
-    PREFIX as TYPE_MAPPER_PREFIX,
-    IntersolarTypeMapper,
-    program::IntersolarTypeMapper as IntersolarTypeMapperProgram,
+    intersolar_type_mapper::{
+        PREFIX as TYPE_MAPPER_PREFIX,
+        IntersolarTypeMapper,
+        program::IntersolarTypeMapper as IntersolarTypeMapperProgram,
+    },
 };
 
 declare_id!("Gv88Apj2oxHTWnECLF4bHnuftMXasfYHyBu3gyfs8XEe");
