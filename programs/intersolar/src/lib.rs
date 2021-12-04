@@ -1,6 +1,5 @@
 pub mod errors;
 pub mod utils;
-
 use {
     crate::errors::ErrorCode,
     crate::utils::{assert_initialized},
@@ -39,6 +38,12 @@ const MAX_NAME_LENGTH: usize = 32;
         let update_authority = &ctx.accounts.update_authority;
         let type_mapper = &ctx.accounts.type_mapper;
 
+        // Deserialize the given mint account
+        let deserialized_mint: &spl_token::state::Mint = &assert_initialized(mint)?;
+
+        // Deserialize the metadata account to check if it is correct
+        let deserialized_metadata = &spl_token_metadata::state::Metadata::from_account_info(metadata)?;
+
         // Construct type mapper PDA
         let (type_mapper_pubkey, _) = anchor_lang::solana_program::pubkey::Pubkey::find_program_address(
             &[TYPE_MAPPER_PREFIX.as_bytes(), symbol.as_bytes(), update_authority.key().as_ref()], 
@@ -51,22 +56,22 @@ const MAX_NAME_LENGTH: usize = 32;
         }
 
         // Check that the given mint is an NFT mint
-        if mint.decimals != 0 || mint.supply != 1 {
+        if deserialized_mint.decimals != 0 || deserialized_mint.supply != 1 {
             return Err(ErrorCode::NoNFT.into())
         }
 
         // Check that the given mint account has the given update_authority
-        if metadata.update_authority != update_authority.key() {
+        if deserialized_metadata.update_authority != update_authority.key() {
             return Err(ErrorCode::UpdateAuthorityMismatch.into());
         }
 
         // Check that the given mint belongs to the given metadata
-        if metadata.mint != mint.key() {
+        if deserialized_metadata.mint != mint.key() {
             return Err(ErrorCode::MintMismatch.into())
         }
 
         // Trim trailing null bytes
-        let metadata_symbol = metadata.data.symbol.trim_matches(char::from(0));
+        let metadata_symbol = deserialized_metadata.data.symbol.trim_matches(char::from(0));
 
         // Check that the given symbol matches the metadata symbol
         if symbol != metadata_symbol {
@@ -84,6 +89,7 @@ const MAX_NAME_LENGTH: usize = 32;
 
     // Sets the name of the intersolar object. 
     // This can be called by the holder of the token from the mint. 
+    // It sets the type for the intersolar object by looking it up the type_mapper with the update_authority of the metadata and provided symbol.
     pub fn rename(ctx: Context<Rename>, name: String) -> ProgramResult {
 
         let intersolar = &mut ctx.accounts.intersolar;
@@ -92,23 +98,26 @@ const MAX_NAME_LENGTH: usize = 32;
         let token_account = &ctx.accounts.token_account;
         let user = &ctx.accounts.user;
 
+        // Check that the token account is initialized
+        let deserialized_token_account: spl_token::state::Account = assert_initialized(token_account)?;
+
         // Check that the user is the owner of the token_account
-        if token_account.owner != user.key() {
+        if deserialized_token_account.owner != *user.key {
             return Err(ErrorCode::OwnerMismatch.into())
         }
 
         // check that the token_account belongs to the mint
-        if token_account.mint != mint.key() {
+        if deserialized_token_account.mint != *mint.key {
             return Err(ErrorCode::MintMismatch.into());
         }
 
         // check that the user holds the nft
-        if token_account.amount != 1 {
+        if deserialized_token_account.amount != 1 {
             return Err(ErrorCode::InsufficientAmount.into())
         }
 
         // check that the mint belongs to the intersolar account
-        if intersolar.mint != mint.key() {
+        if intersolar.mint != *mint.key {
             return Err(ErrorCode::MintMismatch.into()); 
         }
 
@@ -144,12 +153,15 @@ pub struct Initialize<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
 
-    pub mint: Account<'info, spl_token::state::Mint>,
+    #[account(owner = spl_token::id())]
+    pub mint: AccountInfo<'info>,
 
-    pub metadata: Account<'info, spl_token_metadata::state::Metadata>,
+    #[account(owner = spl_token_metadata::id())]
+    pub metadata: AccountInfo<'info>,
 
     pub update_authority: AccountInfo<'info>,
 
+    #[account(owner = intersolar_type_mapper::id())]
     pub type_mapper: Account<'info, IntersolarTypeMapper>,
 
     pub system_program: Program<'info, System>,
@@ -167,10 +179,12 @@ pub struct Rename<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
 
-    pub mint: Account<'info, spl_token::state::Mint>,
+    #[account(constraint = mint.owner == &spl_token::id())]
+    pub mint: AccountInfo<'info>,
 
     // TODO: Check owner against TOKEN_ACCOUNT program ID, not MINT program ID
-    pub token_account: Account<'info, spl_token::state::Account>,
+    #[account(constraint = token_account.owner == &spl_token::id())]
+    pub token_account: AccountInfo<'info>,
 }
 
 #[account]
