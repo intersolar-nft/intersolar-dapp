@@ -1,6 +1,6 @@
 [programs.localnet]
-intersolar = "Gv88Apj2oxHTWnECLF4bHnuftMXasfYHyBu3gyfs8XEe"
-intersolar_type_mapper = "HGocifz2z8cGw1cSSZQ2QENa3ACMGLo7q4k31nav9MAA"
+intersolar = "FW339gZ8MfUP3evYoDs5V88NtuV116mExdNkuciQfCfR"
+intersolar_type_mapper = "9UrP3ZM8H6c4wBPMbNMtbJJtpVc63JDtANvAeiks53V8"
 
 [[test.genesis]]
 address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"

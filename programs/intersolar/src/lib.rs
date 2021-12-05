@@ -16,7 +16,7 @@ use {
     },
 };
 
-declare_id!("Gv88Apj2oxHTWnECLF4bHnuftMXasfYHyBu3gyfs8XEe");
+declare_id!("FW339gZ8MfUP3evYoDs5V88NtuV116mExdNkuciQfCfR");
 
 const PREFIX: &str = "intersolar";
 
