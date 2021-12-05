@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-declare_id!("6R5e1nbRBT94tfZRNZHYCmrydqBipEAPPsYrA8QbTftT");
+declare_id!("HGocifz2z8cGw1cSSZQ2QENa3ACMGLo7q4k31nav9MAA");
 
 pub const PREFIX: &str = "intersolar-type-mapper";
 

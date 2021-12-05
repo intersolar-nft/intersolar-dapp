@@ -20,7 +20,7 @@ module.exports = async function (provider) {
   const payer = anchor.getProvider().wallet;
 
   console.log(
-    "type mapper program id",
+    "intersolarTypeMapperProgram.programId",
     intersolarTypeMapperProgram.programId.toBase58()
   );
 
