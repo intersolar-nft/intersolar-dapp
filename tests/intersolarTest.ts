@@ -5,10 +5,9 @@ import * as assert from "assert";
 import { IDL, Intersolar } from "../target/types/intersolar";
 import { AnyPublicKey, programs } from "@metaplex/js";
 import {
-  PLANET_SYMBOL,
-  PLANET_TYPE,
   setupTypeMapper,
 } from "./intersolarTypeMapperTest";
+import {PLANET_SYMBOL} from "../migrations/constants";
 
 const PREFIX = "intersolar";
 

@@ -3,12 +3,7 @@ import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import * as splToken from '@solana/spl-token';
 import * as assert from 'assert';
 import { IntersolarTypeMapper } from '../target/types/intersolar_type_mapper';
-
-export const PREFIX = "intersolar-type-mapper"
-
-export const PLANET_SYMBOL = "PLANET"
-export const PLANET_TYPE = 0
-
+import {INTERSOLAR_TYPE_MAPPER_PREFIX, PLANET_SYMBOL, PLANET_TYPE} from "../migrations/constants";
 
 const intersolarTypeMapperProgram = anchor.workspace.IntersolarTypeMapper as anchor.Program<IntersolarTypeMapper>;
 
@@ -38,7 +33,7 @@ export interface TypeMapperSetup {
 export async function setupTypeMapper(connection: Connection, updateAuthority: Keypair) : Promise<TypeMapperSetup> {
 
   const [intersolarTypeMapperPublicKey, bump] = await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from(PREFIX), Buffer.from(PLANET_SYMBOL), updateAuthority.publicKey.toBuffer()],
+    [Buffer.from(INTERSOLAR_TYPE_MAPPER_PREFIX), Buffer.from(PLANET_SYMBOL), updateAuthority.publicKey.toBuffer()],
     intersolarTypeMapperProgram.programId
   );
 
