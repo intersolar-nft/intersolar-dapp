@@ -78,9 +78,9 @@ const MAX_NAME_LENGTH: usize = 32;
             return Err(ErrorCode::SymbolMismatch.into())
         }
 
+        intersolar.update_authority = update_authority.key();
         // Set the type of the intersolar account to the type_mapper type
         intersolar.r#type = type_mapper.r#type;
-
         intersolar.mint = mint.key();
         intersolar.bump = bump;
 
@@ -142,8 +142,9 @@ pub struct Initialize<'info> {
         bump=bump,
         payer=user,
         space=
-        8 // discriminator
-        + 32 // Pubkey
+        8 // Discriminator
+        + 32 // Update authority Pubkey
+        + 32 // Mint Pubkey
         + 1 // Type
         + 1 + 4 + MAX_NAME_LENGTH // Optional + len as u32 (borsh) + Name
         + 1 // Bump
@@ -189,6 +190,8 @@ pub struct Rename<'info> {
 
 #[account]
 pub struct Intersolar {
+    // The update authority for this account
+    pub update_authority: Pubkey,
     // The NFT token_mint this account belongs to
     pub mint: Pubkey,
     // The type of this intersolar object (e.g. 0 for "Planet", 1 for "Ship", ...)
