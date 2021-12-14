@@ -1,5 +1,5 @@
 [programs.localnet]
-intersolar = "FW339gZ8MfUP3evYoDs5V88NtuV116mExdNkuciQfCfR"
+intersolar = "DDRZij9peKGkwGsJhhETds3yFwag7S3MBcY8J6ghw4Tp"
 intersolar_type_mapper = "9UrP3ZM8H6c4wBPMbNMtbJJtpVc63JDtANvAeiks53V8"
 
 [[test.genesis]]
