@@ -131,6 +131,10 @@ const MAX_NAME_LENGTH: usize = 32;
 
         Ok(())
     }
+
+    pub fn close(_ctx: Context<Close>) -> ProgramResult {
+        Ok(())
+    }
 }
 
 #[derive(Accounts)]
@@ -186,6 +190,18 @@ pub struct Rename<'info> {
     // TODO: Check owner against TOKEN_ACCOUNT program ID, not MINT program ID
     #[account(constraint = token_account.owner == &spl_token::id())]
     pub token_account: AccountInfo<'info>,
+}
+
+#[derive(Accounts)]
+pub struct Close<'info> {
+    #[account(
+        mut,
+        close = update_authority
+    )]
+    pub intersolar: Account<'info, Intersolar>,
+
+    #[account(mut, constraint = update_authority.key() == intersolar.update_authority)]
+    pub update_authority: Signer<'info>,
 }
 
 #[account]
